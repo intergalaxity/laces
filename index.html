@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laces Microblog</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000; /* Pure black background */
+            overflow: hidden; /* Hide potential scrollbar on black screen */
+        }
+        
+        /* GSI Button Styles - Minimal implementation for requested HTML structure */
+        .gsi-material-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            width: auto;
+            border-radius: 9999px; /* Tailwind's rounded-full */
+            border: 1px solid #777; 
+            background-color: #000000;
+            color: #E5E7EB; /* Light gray text */
+            font-size: 14px;
+            font-weight: 500;
+            padding: 0 16px 0 0;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        .gsi-material-button:hover {
+            background-color: #1a1a1a;
+            border-color: #999;
+        }
+        .gsi-material-button-icon {
+            margin-right: 12px;
+            padding: 8px;
+            background-color: #fff;
+            border-radius: 9999px;
+            box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.25);
+        }
+        .gsi-material-button-icon svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+        
+    </style>
+</head>
+<body class="min-h-screen text-gray-200">
+    
+    <!-- CENTRED DIVIDER -->
+    <div class="fixed top-0 left-1/2 h-full w-px bg-gray-700 pointer-events-none transform -translate-x-1/2 z-0"></div>
+
+    <!-- MAIN APP CONTAINER: Full height/width to center content -->
+    <div class="h-screen w-full flex flex-col justify-center items-center z-10 p-4">
+
+        <!-- LANDING PAGE (Initial view) -->
+        <div id="landing-page" class="w-full h-full flex items-center justify-center">
+            <div class="grid grid-cols-2 max-w-4xl w-full">
+                
+                <!-- LEFT SIDE: Text -->
+                <div class="flex flex-col justify-center items-end pr-10 text-right">
+                    <h1 class="text-7xl font-extrabold text-white">Laces</h1>
+                    <p class="mt-4 text-xl text-gray-400 max-w-sm">Stay up-to-date with all of the things.</p>
+                </div>
+                
+                <!-- RIGHT SIDE: Button -->
+                <div class="flex flex-col justify-center items-start pl-10 text-left">
+                    <button id="google-sign-in" class="gsi-material-button">
+                        <div class="gsi-material-button-state"></div>
+                        <div class="gsi-material-button-content-wrapper">
+                            <div class="gsi-material-button-icon">
+                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlns:xlink="http://www.w3.org/1999/xlink" style="display: block;">
+                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                                    <path fill="none" d="M0 0h48v48H0z"></path>
+                                </svg>
+                            </div>
+                            <span class="gsi-material-button-contents">Continue with Google</span>
+                            <span style="display: none;">Continue with Google</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE VIEW (Shown after sign-in) -->
+        <div id="profile-view" class="hidden text-center">
+            <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-white">
+            <h2 id="profile-name" class="text-3xl font-bold text-white mb-2"></h2>
+            <p class="text-sm text-gray-500">Welcome to Laces.</p>
+        </div>
+        
+        <!-- HIDDEN MICROPOSTING CONTENT (For potential future use/debugging) -->
+        <div id="old-app-content" class="hidden">
+            <!-- All previous elements are tucked away here -->
+            <header class="text-center py-6 border-b border-gray-700 mb-6">
+                <h1 class="text-4xl font-extrabold text-blue-400">ChirpStream</h1>
+                <p id="user-info" class="mt-2 text-sm text-gray-400"></p>
+                <div id="loading-indicator" class="text-sm text-gray-500 mt-2 hidden">Initializing app...</div>
+            </header>
+
+            <div id="post-form-card" class="bg-gray-900 p-4 shadow-xl rounded-xl mb-8 border border-gray-800">
+                <h2 class="text-xl font-semibold mb-3 text-gray-100">What's on your mind?</h2>
+                <textarea id="post-content"
+                        class="w-full p-3 border border-gray-700 rounded-lg focus:ring-blue-400 focus:border-blue-400 transition duration-150 resize-none h-24 bg-gray-800 text-gray-100 placeholder-gray-500"
+                        maxlength="280"
+                        placeholder="Share your thoughts (max 280 characters)..."></textarea>
+                <div class="flex justify-between items-center mt-3">
+                    <span id="char-count" class="text-sm text-gray-400">0/280</span>
+                    <button id="post-button"
+                            class="bg-blue-600 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:bg-blue-500 transition duration-150 disabled:opacity-50"
+                            disabled>
+                        Post Chirp
+                    </button>
+                </div>
+            </div>
+
+            <main>
+                <h2 class="text-2xl font-bold mb-4 text-gray-100 border-b border-gray-700 pb-2">Recent Chirps</h2>
+                <div id="post-feed" class="post-feed space-y-4 max-h-[70vh] overflow-y-auto">
+                    <div id="empty-state" class="text-center p-8 bg-gray-900 rounded-xl shadow-inner hidden">
+                        <p class="text-gray-500 italic">No chirps yet. Be the first one to post!</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports and Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, orderBy, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase instances
+        let app, db, auth;
+        let userId = null;
+        const POSTS_COLLECTION_NAME = 'posts';
+        const MAX_CHARS = 280;
+        
+        // UI Elements
+        const landingPage = document.getElementById('landing-page');
+        const profileView = document.getElementById('profile-view');
+        const profilePic = document.getElementById('profile-pic');
+        const profileName = document.getElementById('profile-name');
+        const googleSignInButton = document.getElementById('google-sign-in');
+
+        // References to hidden elements (kept for background logic)
+        const postFeed = document.getElementById('post-feed');
+
+
+        // --- Utility Functions ---
+
+        /**
+         * Safely accesses the global app ID and config.
+         */
+        function getFirebaseGlobals() {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            return { appId, firebaseConfig, authToken };
+        }
+
+        /**
+         * Formats a Unix timestamp (seconds) into a readable, relative time string.
+         * NOTE: This function is still defined but is currently writing to a hidden element.
+         */
+        function formatTimestamp(timestampInSeconds) {
+            if (!timestampInSeconds) return 'Just now';
+            const now = new Date();
+            const date = new Date(timestampInSeconds * 1000);
+            const diff = now.getTime() - date.getTime();
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        // --- Firebase Initialization and Authentication ---
+
+        /**
+         * Handles the state transition based on authentication status.
+         */
+        function updateUI(user) {
+            if (user && user.isAnonymous === false) {
+                // User is signed in with a Google account
+                userId = user.uid;
+                profileName.textContent = user.displayName || 'Anonymous User';
+                profilePic.src = user.photoURL || 'https://placehold.co/96x96/4B5563/FFFFFF?text=P';
+                
+                landingPage.classList.add('hidden');
+                profileView.classList.remove('hidden');
+                setupPostListener(); // Start listening for posts after auth
+            } else {
+                // User is anonymous or logged out (show sign-in page)
+                profileView.classList.add('hidden');
+                landingPage.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Initializes Firebase and performs authentication.
+         */
+        async function initializeAndAuthenticate() {
+            const { appId, firebaseConfig, authToken } = getFirebaseGlobals();
+
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
+                return;
+            }
+
+            try {
+                // Initialize Firebase services
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Set Firestore log level for debugging
+                setLogLevel('error'); 
+
+                // 1. Initial Authentication for Canvas stability
+                if (!auth.currentUser) {
+                    if (authToken) {
+                        // Use provided custom token
+                        await signInWithCustomToken(auth, authToken);
+                    } else {
+                        // Fallback to anonymous sign-in
+                        await signInAnonymously(auth);
+                    }
+                }
+
+                // 2. Auth State Listener
+                onAuthStateChanged(auth, (user) => {
+                    updateUI(user);
+                    if (user && user.isAnonymous) {
+                         // Ensure we have a userId for background operations even if anonymous
+                        userId = user.uid;
+                        setupPostListener();
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+            }
+        }
+
+        /**
+         * Initiates the Google Sign-In process.
+         */
+        async function handleGoogleSignIn() {
+            const provider = new GoogleAuthProvider();
+            try {
+                // Sign in with popup
+                await signInWithPopup(auth, provider);
+                // onAuthStateChanged will handle the UI update
+            } catch (error) {
+                // Handle Errors here.
+                console.error("Google Sign-In Error:", error.code, error.message);
+                // Optional: Show a temporary error message on the landing page
+            }
+        }
+
+        // --- Post Handling (Background Logic) ---
+
+        /**
+         * Renders the list of posts to the hidden DOM element.
+         * NOTE: This is still defined but is currently writing to a hidden element.
+         * @param {Array<Object>} posts - The list of post objects.
+         */
+        function renderPosts(posts) {
+            // Background logic remains the same for data fetching
+            posts.sort((a, b) => b.timestamp - a.timestamp);
+            postFeed.innerHTML = ''; 
+            // ... rendering logic for hidden element
+        }
+
+        /**
+         * Sets up a real-time listener for the posts collection.
+         */
+        function setupPostListener() {
+            if (!db || !userId) return;
+
+            const { appId } = getFirebaseGlobals();
+            const postsPath = `artifacts/${appId}/public/data/${POSTS_COLLECTION_NAME}`;
+            const postsCollectionRef = collection(db, postsPath);
+
+            const q = query(postsCollectionRef);
+
+            // Set up the real-time listener (data is fetched and rendered to the hidden element)
+            onSnapshot(q, (snapshot) => {
+                const posts = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const timestampInSeconds = data.timestamp ? data.timestamp.seconds : Date.now() / 1000;
+                    posts.push({ id: doc.id, ...data, timestamp: timestampInSeconds });
+                });
+                renderPosts(posts);
+            }, (error) => {
+                console.error("Error getting real-time posts:", error);
+            });
+        }
+
+
+        // --- Event Listeners and Startup ---
+
+        googleSignInButton.addEventListener('click', handleGoogleSignIn);
+
+        // Start the application setup
+        initializeAndAuthenticate();
+    </script>
+</body>
+</html>
