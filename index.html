@@ -32,7 +32,7 @@
             cursor: pointer;
             transition: background-color 0.15s;
         }
-        .gsi-material-button:hover {
+        .gsi-material-button:hover:not(:disabled) {
             background-color: #1a1a1a;
             border-color: #999;
         }
@@ -48,7 +48,10 @@
             height: 18px;
             display: block;
         }
-        
+        .gsi-material-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="min-h-screen text-gray-200">
@@ -69,7 +72,7 @@
                     <p class="mt-4 text-xl text-gray-400 max-w-sm">Stay up-to-date with all of the things.</p>
                 </div>
                 
-                <!-- RIGHT SIDE: Button -->
+                <!-- RIGHT SIDE: Button and Error Feedback -->
                 <div class="flex flex-col justify-center items-start pl-10 text-left">
                     <button id="google-sign-in" class="gsi-material-button">
                         <div class="gsi-material-button-state"></div>
@@ -83,10 +86,10 @@
                                     <path fill="none" d="M0 0h48v48H0z"></path>
                                 </svg>
                             </div>
-                            <span class="gsi-material-button-contents">Continue with Google</span>
-                            <span style="display: none;">Continue with Google</span>
+                            <span id="gsi-text" class="gsi-material-button-contents">Continue with Google</span>
                         </div>
                     </button>
+                    <p id="auth-error" class="text-sm text-red-400 mt-2 hidden">Sign-in failed. Check the console for details.</p>
                 </div>
             </div>
         </div>
@@ -137,14 +140,13 @@
     <!-- Firebase SDK Imports and Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, onSnapshot, collection, query, orderBy, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Firebase instances
         let app, db, auth;
         let userId = null;
         const POSTS_COLLECTION_NAME = 'posts';
-        const MAX_CHARS = 280;
         
         // UI Elements
         const landingPage = document.getElementById('landing-page');
@@ -152,6 +154,8 @@
         const profilePic = document.getElementById('profile-pic');
         const profileName = document.getElementById('profile-name');
         const googleSignInButton = document.getElementById('google-sign-in');
+        const gsiButtonText = document.getElementById('gsi-text');
+        const authError = document.getElementById('auth-error');
 
         // References to hidden elements (kept for background logic)
         const postFeed = document.getElementById('post-feed');
@@ -171,7 +175,6 @@
 
         /**
          * Formats a Unix timestamp (seconds) into a readable, relative time string.
-         * NOTE: This function is still defined but is currently writing to a hidden element.
          */
         function formatTimestamp(timestampInSeconds) {
             if (!timestampInSeconds) return 'Just now';
@@ -199,7 +202,7 @@
             if (user && user.isAnonymous === false) {
                 // User is signed in with a Google account
                 userId = user.uid;
-                profileName.textContent = user.displayName || 'Anonymous User';
+                profileName.textContent = user.displayName || 'User Profile';
                 profilePic.src = user.photoURL || 'https://placehold.co/96x96/4B5563/FFFFFF?text=P';
                 
                 landingPage.classList.add('hidden');
@@ -262,15 +265,32 @@
          * Initiates the Google Sign-In process.
          */
         async function handleGoogleSignIn() {
+            authError.classList.add('hidden');
+            googleSignInButton.disabled = true;
+            gsiButtonText.textContent = 'Signing in...';
+
             const provider = new GoogleAuthProvider();
             try {
                 // Sign in with popup
                 await signInWithPopup(auth, provider);
                 // onAuthStateChanged will handle the UI update
             } catch (error) {
-                // Handle Errors here.
                 console.error("Google Sign-In Error:", error.code, error.message);
-                // Optional: Show a temporary error message on the landing page
+                
+                let friendlyMessage = "Sign-in failed. Please check your browser's console.";
+
+                if (error.code === 'auth/popup-closed-by-user') {
+                    friendlyMessage = "Sign-in cancelled. Did you close the pop-up window?";
+                } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/web-storage-unsupported') {
+                    friendlyMessage = "Please ensure pop-ups are allowed for this site and try again.";
+                }
+
+                authError.textContent = friendlyMessage;
+                authError.classList.remove('hidden');
+
+            } finally {
+                googleSignInButton.disabled = false;
+                gsiButtonText.textContent = 'Continue with Google';
             }
         }
 
@@ -278,7 +298,6 @@
 
         /**
          * Renders the list of posts to the hidden DOM element.
-         * NOTE: This is still defined but is currently writing to a hidden element.
          * @param {Array<Object>} posts - The list of post objects.
          */
         function renderPosts(posts) {
